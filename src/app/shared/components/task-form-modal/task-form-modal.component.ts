@@ -1,7 +1,4 @@
-import {
-  Component, Input, Output, EventEmitter,
-  ChangeDetectionStrategy, inject, signal
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { TasksService } from '../../../core/services/tasks.service';
 import { Task } from '../../models/index';
@@ -20,40 +17,36 @@ export class TaskFormModalComponent {
   @Output() submitted = new EventEmitter<Task>();
   @Output() closed = new EventEmitter<void>();
 
-  private readonly fb = inject(FormBuilder);
-  private readonly tasksService = inject(TasksService);
+  private fb = inject(FormBuilder);
+  private tasksService = inject(TasksService);
 
-  submitting = signal(false);
-  submitError = signal<string | null>(null);
+  saving = signal(false);
+  submitErr = signal<string | null>(null);
 
   form = this.fb.group({
-    title: ['', [
-      Validators.required,
-      Validators.minLength(3),
-      Validators.maxLength(200)
-    ]],
+    title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
     status: ['pending' as 'pending' | 'completed', Validators.required]
   });
 
-  get titleInvalid(): boolean {
-    const ctrl = this.form.get('title');
-    return !!(ctrl?.invalid && ctrl?.touched);
+  get titleInvalid() {
+    const c = this.form.get('title');
+    return c?.invalid && c?.touched;
   }
 
-  onOverlayClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('overlay')) {
+  onOverlayClick(e: MouseEvent) {
+    if ((e.target as HTMLElement).classList.contains('overlay')) {
       this.closed.emit();
     }
   }
 
-  onSubmit(): void {
+  submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.submitting.set(true);
-    this.submitError.set(null);
+    this.saving.set(true);
+    this.submitErr.set(null);
 
     const { title, status } = this.form.value;
 
@@ -62,12 +55,12 @@ export class TaskFormModalComponent {
       status: status as 'pending' | 'completed'
     }).subscribe({
       next: (task: Task) => {
-        this.submitting.set(false);
+        this.saving.set(false);
         this.submitted.emit(task);
       },
       error: (err: Error) => {
-        this.submitting.set(false);
-        this.submitError.set(err.message ?? 'Failed to create task.');
+        this.saving.set(false);
+        this.submitErr.set(err.message);
       }
     });
   }

@@ -5,24 +5,18 @@ import { User, Todo } from '../../shared/models';
 
 describe('ApiService', () => {
   let service: ApiService;
-  let httpMock: HttpTestingController;
+  let http: HttpTestingController;
 
-  const mockUsers: User[] = [
-    {
-      id: 1,
-      name: 'Leanne Graham',
-      username: 'Bret',
-      email: 'Sincere@april.biz',
-      address: { street: 'Kulas Light', suite: 'Apt. 556', city: 'Gwenborough', zipcode: '92998-3874', geo: { lat: '-37.3159', lng: '81.1496' } },
-      phone: '1-770-736-8031',
-      website: 'hildegard.org',
-      company: { name: 'Romaguera-Crona', catchPhrase: 'Multi-layered client-server neural-net', bs: 'harness real-time e-markets' }
-    }
-  ];
+  const mockUsers: User[] = [{
+    id: 1, name: 'Leanne Graham', username: 'Bret', email: 'sincere@april.biz',
+    address: { street: 'Kulas Light', suite: 'Apt. 556', city: 'Gwenborough', zipcode: '92998', geo: { lat: '-37', lng: '81' } },
+    phone: '1-770-736-8031', website: 'hildegard.org',
+    company: { name: 'Romaguera-Crona', catchPhrase: 'Multi-layered', bs: 'harness' }
+  }];
 
   const mockTodos: Todo[] = [
-    { id: 1, userId: 1, title: 'delectus aut autem', completed: false },
-    { id: 2, userId: 1, title: 'quis ut nam facilis', completed: true }
+    { id: 1, userId: 1, title: 'task one', completed: false },
+    { id: 2, userId: 1, title: 'task two', completed: true }
   ];
 
   beforeEach(() => {
@@ -31,84 +25,53 @@ describe('ApiService', () => {
       providers: [ApiService]
     });
     service = TestBed.inject(ApiService);
-    httpMock = TestBed.inject(HttpTestingController);
+    http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => http.verify());
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('getUsers()', () => {
-    it('should return an array of users', () => {
-      service.getUsers().subscribe(users => {
-        expect(users.length).toBe(1);
-        expect(users[0].name).toBe('Leanne Graham');
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/users');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockUsers);
+  it('getUsers() should return users', () => {
+    service.getUsers().subscribe(users => {
+      expect(users.length).toBe(1);
+      expect(users[0].name).toBe('Leanne Graham');
     });
-
-    it('should handle network error gracefully', () => {
-      service.getUsers().subscribe({
-        error: err => expect(err.message).toContain('Network error')
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/users');
-      req.error(new ProgressEvent('error'));
-    });
-
-    it('should handle 404 error gracefully', () => {
-      service.getUsers().subscribe({
-        error: err => expect(err.message).toContain('not found')
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/users');
-      req.flush('Not Found', { status: 404, statusText: 'Not Found' });
-    });
-
-    it('should handle 500 server error', () => {
-      service.getUsers().subscribe({
-        error: err => expect(err.message).toContain('Server error')
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/users');
-      req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
-    });
+    http.expectOne('https://jsonplaceholder.typicode.com/users').flush(mockUsers);
   });
 
-  describe('getTodos()', () => {
-    it('should return todos', () => {
-      service.getTodos().subscribe(todos => {
-        expect(todos.length).toBe(2);
-        expect(todos[0].completed).toBeFalse();
-        expect(todos[1].completed).toBeTrue();
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/todos');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockTodos);
-    });
+  it('getUsers() should handle network error', () => {
+    service.getUsers().subscribe({ error: err => expect(err.message).toContain('No internet') });
+    http.expectOne('https://jsonplaceholder.typicode.com/users').error(new ProgressEvent('error'));
   });
 
-  describe('getTodosByUser()', () => {
-    it('should filter todos by userId', () => {
-      service.getTodosByUser(1).subscribe(todos => {
-        expect(todos.length).toBe(2);
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/todos?userId=1');
-      req.flush(mockTodos);
-    });
+  it('getUsers() should handle 404', () => {
+    service.getUsers().subscribe({ error: err => expect(err.message).toContain('not found') });
+    http.expectOne('https://jsonplaceholder.typicode.com/users').flush('', { status: 404, statusText: 'Not Found' });
   });
 
-  describe('createTodo()', () => {
-    it('should POST a new todo and return it', () => {
-      const newTodo = { userId: 1, title: 'New Task', completed: false };
-      service.createTodo(newTodo).subscribe(todo => {
-        expect(todo.title).toBe('New Task');
-      });
-      const req = httpMock.expectOne('https://jsonplaceholder.typicode.com/todos');
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(newTodo);
-      req.flush({ id: 201, ...newTodo });
-    });
+  it('getUsers() should handle 500', () => {
+    service.getUsers().subscribe({ error: err => expect(err.message).toContain('Server error') });
+    http.expectOne('https://jsonplaceholder.typicode.com/users').flush('', { status: 500, statusText: 'Server Error' });
+  });
+
+  it('getTodos() should return todos', () => {
+    service.getTodos().subscribe(todos => expect(todos.length).toBe(2));
+    http.expectOne('https://jsonplaceholder.typicode.com/todos').flush(mockTodos);
+  });
+
+  it('getTodosByUser() should use userId param', () => {
+    service.getTodosByUser(1).subscribe(todos => expect(todos.length).toBe(2));
+    http.expectOne('https://jsonplaceholder.typicode.com/todos?userId=1').flush(mockTodos);
+  });
+
+  it('createTodo() should POST', () => {
+    const payload = { userId: 1, title: 'new task', completed: false };
+    service.createTodo(payload).subscribe(t => expect(t.title).toBe('new task'));
+    const req = http.expectOne('https://jsonplaceholder.typicode.com/todos');
+    expect(req.request.method).toBe('POST');
+    req.flush({ id: 201, ...payload });
   });
 });

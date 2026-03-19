@@ -1,17 +1,12 @@
-<div class="task-item" [class.is-done]="task.completed">
-  <div class="checkbox" [class.checked]="task.completed">
-    @if (task.completed) {
-      <span class="check-icon">✓</span>
-    }
+<div class="task-row" [class.done]="task.completed">
+  <div class="check" [class.checked]="task.completed">
+    @if (task.completed) { ✓ }
   </div>
-
-  <span class="task-title">{{ task.title }}</span>
-
+  <span class="title">{{ task.title }}</span>
   @if (isNew) {
-    <span class="new-tag">new</span>
+    <span class="new">new</span>
   }
-
-  <span class="status-badge" [class.completed]="task.completed" [class.pending]="!task.completed">
+  <span class="status" [class.completed]="task.completed" [class.pending]="!task.completed">
     {{ task.completed ? 'Completed' : 'Pending' }}
   </span>
 </div>

@@ -1,4 +1,3 @@
-// User / Project model
 export interface User {
   id: number;
   name: string;
@@ -15,12 +14,7 @@ export interface Address {
   suite: string;
   city: string;
   zipcode: string;
-  geo: Geo;
-}
-
-export interface Geo {
-  lat: string;
-  lng: string;
+  geo: { lat: string; lng: string };
 }
 
 export interface Company {
@@ -29,15 +23,13 @@ export interface Company {
   bs: string;
 }
 
-// Todo / Task model
 export interface Todo {
-  userId: number;
   id: number;
+  userId: number;
   title: string;
   completed: boolean;
 }
 
-// Comment model
 export interface Comment {
   postId: number;
   id: number;
@@ -46,27 +38,19 @@ export interface Comment {
   body: string;
 }
 
-// Derived / enriched models
+// User + computed task counts
 export interface Project extends User {
   taskCount?: number;
   completedTaskCount?: number;
   pendingTaskCount?: number;
 }
 
+// Todo + status string
 export interface Task extends Todo {
-  status: TaskStatus;
+  status: 'pending' | 'completed';
 }
 
-export type TaskStatus = 'pending' | 'completed';
-
-// Form model
 export interface TaskFormData {
   title: string;
-  status: TaskStatus;
-}
-
-// State helpers
-export interface LoadingState {
-  loading: boolean;
-  error: string | null;
+  status: 'pending' | 'completed';
 }

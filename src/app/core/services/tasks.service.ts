@@ -2,40 +2,32 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { Task, TaskFormData, Todo } from '../../shared/models';
+import { Task, TaskFormData } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class TasksService {
-  private readonly api = inject(ApiService);
+  private api = inject(ApiService);
 
-  // Local signal-based state for newly created tasks (client-side only)
+  // keep track of tasks created this session locally
   private localTasks = signal<Task[]>([]);
 
   getLocalTasks(): Task[] {
     return this.localTasks();
   }
 
-  createTask(userId: number, formData: TaskFormData): Observable<Task> {
-    const todo: Partial<Todo> = {
+  createTask(userId: number, data: TaskFormData): Observable<Task> {
+    return this.api.createTodo({
       userId,
-      title: formData.title,
-      completed: formData.status === 'completed'
-    };
-    return this.api.createTodo(todo).pipe(
-      map(created => ({
-        ...created,
-        // JSONPlaceholder returns id=201 for all new todos, generate locally unique
-        id: Date.now(),
+      title: data.title,
+      completed: data.status === 'completed'
+    }).pipe(
+      map(res => ({
+        ...res,
+        id: Date.now(), // jsonplaceholder always returns 201 so use timestamp
         userId,
-        status: formData.status
+        status: data.status
       } as Task)),
-      tap(task => {
-        this.localTasks.update(tasks => [task, ...tasks]);
-      })
+      tap(task => this.localTasks.update(prev => [task, ...prev]))
     );
-  }
-
-  clearLocalTasks(): void {
-    this.localTasks.set([]);
   }
 }

@@ -1,14 +1,14 @@
 @if (variant === 'card') {
-  <div class="skeleton-grid">
+  <div class="skel-grid">
     @for (i of items; track i) {
-      <div class="skeleton-card">
+      <div class="skel-card">
         <div class="row">
-          <div class="skel avatar"></div>
-          <div class="skel badge"></div>
+          <div class="skel circle"></div>
+          <div class="skel chip"></div>
         </div>
-        <div class="skel line wide"></div>
-        <div class="skel line mid"></div>
-        <div class="skel line short"></div>
+        <div class="skel line w60"></div>
+        <div class="skel line w40"></div>
+        <div class="skel line w50"></div>
         <div class="skel block"></div>
       </div>
     }
@@ -16,11 +16,11 @@
 }
 
 @if (variant === 'row') {
-  <div class="skeleton-list">
+  <div class="skel-list">
     @for (i of items; track i) {
-      <div class="skeleton-row">
-        <div class="skel check"></div>
-        <div class="skel line flex"></div>
+      <div class="skel-row">
+        <div class="skel box"></div>
+        <div class="skel line flex1"></div>
         <div class="skel chip"></div>
       </div>
     }
@@ -28,11 +28,11 @@
 }
 
 @if (variant === 'header') {
-  <div class="skeleton-header">
-    <div class="skel avatar-lg"></div>
+  <div class="skel-header">
+    <div class="skel circle lg"></div>
     <div class="lines">
-      <div class="skel line wide"></div>
-      <div class="skel line mid"></div>
+      <div class="skel line w60"></div>
+      <div class="skel line w40"></div>
     </div>
   </div>
 }

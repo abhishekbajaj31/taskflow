@@ -1,26 +1,22 @@
-.empty-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.empty-box {
   text-align: center;
-  padding: 3.5rem 1.5rem;
+  padding: 48px 20px;
+  color: #6b7280;
 
-  .empty-icon {
-    font-size: 1.75rem;
-    color: #cbd5e1;
-    margin: 0 0 0.75rem;
+  .icon {
+    font-size: 24px;
+    margin: 0 0 8px;
+    opacity: 0.4;
   }
 
   h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #475569;
-    margin: 0 0 0.35rem;
+    font-size: 15px;
+    color: #374151;
+    margin: 0 0 4px;
   }
 
-  .subtitle {
-    font-size: 0.82rem;
-    color: #94a3b8;
+  p {
+    font-size: 13px;
     margin: 0;
   }
 }

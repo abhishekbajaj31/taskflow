@@ -1,85 +1,61 @@
-.task-item {
+.task-row {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  transition: background 0.1s;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f3f4f6;
 
-  &:last-child {
-    border-bottom: none;
-  }
+  &:last-child { border-bottom: none; }
+  &:hover { background: #fafafa; }
 
-  &:hover {
-    background: #f8fafc;
-  }
-
-  &.is-done {
-    opacity: 0.65;
-
-    .task-title {
-      text-decoration: line-through;
-      color: #94a3b8;
-    }
+  &.done {
+    opacity: 0.6;
+    .title { text-decoration: line-through; color: #9ca3af; }
   }
 }
 
-.checkbox {
-  width: 18px;
-  height: 18px;
+.check {
+  width: 17px;
+  height: 17px;
   border-radius: 4px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #d1d5db;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  &.checked {
-    background: #16a34a;
-    border-color: #16a34a;
-  }
-}
-
-.check-icon {
-  font-size: 0.6rem;
+  font-size: 10px;
   color: #fff;
   font-weight: 700;
+
+  &.checked { background: #16a34a; border-color: #16a34a; }
 }
 
-.task-title {
+.title {
   flex: 1;
-  font-size: 0.875rem;
-  color: #334155;
-  min-width: 0;
+  font-size: 14px;
+  color: #374151;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.new-tag {
-  font-size: 0.65rem;
+.new {
+  font-size: 10px;
   font-weight: 600;
-  padding: 0.1rem 0.4rem;
+  padding: 1px 6px;
   background: #eff6ff;
   color: #2563eb;
   border-radius: 3px;
   flex-shrink: 0;
 }
 
-.status-badge {
-  font-size: 0.7rem;
+.status {
+  font-size: 11px;
   font-weight: 500;
-  padding: 0.2rem 0.55rem;
+  padding: 2px 8px;
   border-radius: 4px;
   flex-shrink: 0;
 
-  &.completed {
-    background: #dcfce7;
-    color: #16a34a;
-  }
-
-  &.pending {
-    background: #fef9c3;
-    color: #ca8a04;
-  }
+  &.completed { background: #dcfce7; color: #16a34a; }
+  &.pending   { background: #fef9c3; color: #ca8a04; }
 }

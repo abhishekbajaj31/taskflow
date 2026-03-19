@@ -6,35 +6,33 @@ import { Comment } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class CommentsService {
-  private readonly api = inject(ApiService);
+  private api = inject(ApiService);
+  private comments$ = this.api.getComments().pipe(shareReplay(1));
 
-  // comments are keyed by postId — we use this to count activity per "project"
-  // We map postId 1–10 → userId 1–10 to simulate per-project comment counts
-  private allComments$ = this.api.getComments().pipe(shareReplay(1));
+  // map postId to projectId (postId 1-10 = project 1-10, rest we wrap around)
+  private getProjectId(postId: number): number {
+    return postId <= 10 ? postId : (postId % 10) || 10;
+  }
 
-  getCommentCountByProject(): Observable<Record<number, number>> {
-    return this.allComments$.pipe(
+  getCountsByProject(): Observable<Record<number, number>> {
+    return this.comments$.pipe(
       map(comments => {
         const counts: Record<number, number> = {};
         comments.forEach(c => {
-          // postId 1-10 maps directly to userId/projectId 1-10
-          const projectId = c.postId <= 10 ? c.postId : (c.postId % 10) || 10;
-          counts[projectId] = (counts[projectId] ?? 0) + 1;
+          const pid = this.getProjectId(c.postId);
+          counts[pid] = (counts[pid] || 0) + 1;
         });
         return counts;
       })
     );
   }
 
-  getCommentsByProject(projectId: number): Observable<Comment[]> {
-    return this.allComments$.pipe(
+  getByProject(projectId: number): Observable<Comment[]> {
+    return this.comments$.pipe(
       map(comments =>
         comments
-          .filter(c => {
-            const pid = c.postId <= 10 ? c.postId : (c.postId % 10) || 10;
-            return pid === projectId;
-          })
-          .slice(0, 5) // show latest 5 comments per project
+          .filter(c => this.getProjectId(c.postId) === projectId)
+          .slice(0, 5)
       )
     );
   }

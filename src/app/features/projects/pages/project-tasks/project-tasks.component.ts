@@ -1,12 +1,10 @@
-import {
-  Component, OnInit, OnDestroy, ChangeDetectionStrategy,
-  ChangeDetectorRef, inject, signal, Input
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subject, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+
 import { ProjectsService } from '../../../../core/services/projects.service';
 import { TasksService } from '../../../../core/services/tasks.service';
 import { CommentsService } from '../../../../core/services/comments.service';
@@ -17,90 +15,83 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { TaskFormModalComponent } from '../../../../shared/components/task-form-modal/task-form-modal.component';
 import { TaskItemComponent } from '../../../tasks/components/task-item.component';
 
-type FilterStatus = 'all' | 'pending' | 'completed';
+type Filter = 'all' | 'pending' | 'completed';
 
 @Component({
   selector: 'app-project-tasks',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule, RouterLink, ReactiveFormsModule,
-    LoadingSkeletonComponent, ErrorStateComponent, EmptyStateComponent,
-    TaskFormModalComponent, TaskItemComponent
-  ],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, LoadingSkeletonComponent, ErrorStateComponent, EmptyStateComponent, TaskFormModalComponent, TaskItemComponent],
   templateUrl: './project-tasks.component.html',
   styleUrl: './project-tasks.component.scss'
 })
 export class ProjectTasksComponent implements OnInit, OnDestroy {
   @Input() id!: string;
 
-  private readonly projectsService = inject(ProjectsService);
-  private readonly tasksService = inject(TasksService);
-  private readonly commentsService = inject(CommentsService);
-  private readonly cdr = inject(ChangeDetectorRef);
-  private readonly destroy$ = new Subject<void>();
+  private projectsService = inject(ProjectsService);
+  private tasksService = inject(TasksService);
+  private commentsService = inject(CommentsService);
+  private cdr = inject(ChangeDetectorRef);
+  private destroy$ = new Subject<void>();
 
-  // expose Math for template
   readonly Math = Math;
+  readonly PAGE_SIZE = 10;
 
   project = signal<Project | null>(null);
   allTasks = signal<Task[]>([]);
-  filteredTasks = signal<Task[]>([]);
+  filtered = signal<Task[]>([]);
+  paged = signal<Task[]>([]);
   comments = signal<Comment[]>([]);
+
   loading = signal(true);
   error = signal<string | null>(null);
-  modalOpen = signal(false);
-  activeFilter = signal<FilterStatus>('all');
-
-  // Stats
-  completedCount = signal(0);
-  pendingCount = signal(0);
-  completionPct = signal(0);
-
-  // Pagination
-  readonly pageSize = 10;
+  showModal = signal(false);
+  activeFilter = signal<Filter>('all');
   currentPage = signal(1);
-  pagedTasks = signal<Task[]>([]);
   totalPages = signal(0);
 
-  searchControl = new FormControl('');
+  // stats
+  doneCount = signal(0);
+  pendingCount = signal(0);
+  pct = signal(0);
 
-  filters: { label: string; value: FilterStatus }[] = [
+  search = new FormControl('');
+
+  filters: { label: string; value: Filter }[] = [
     { label: 'All', value: 'all' },
     { label: 'Pending', value: 'pending' },
     { label: 'Completed', value: 'completed' }
   ];
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadData();
-    this.searchControl.valueChanges.pipe(
+
+    this.search.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.currentPage.set(1);
-      this.applyFilters();
+      this.applyFilter();
     });
   }
 
-  loadData(): void {
+  loadData() {
     this.loading.set(true);
     this.error.set(null);
 
     combineLatest([
       this.projectsService.getProjectWithTasks(+this.id),
-      this.commentsService.getCommentsByProject(+this.id)
-    ]).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
+      this.commentsService.getByProject(+this.id)
+    ]).pipe(takeUntil(this.destroy$)).subscribe({
       next: ([{ project, tasks }, comments]) => {
         this.project.set(project);
-        const localTasks = this.tasksService.getLocalTasks()
-          .filter(t => t.userId === +this.id);
-        this.allTasks.set([...localTasks, ...tasks]);
+        // prepend any tasks created this session
+        const local = this.tasksService.getLocalTasks().filter(t => t.userId === +this.id);
+        this.allTasks.set([...local, ...tasks]);
         this.comments.set(comments);
-        this.updateStats();
-        this.applyFilters();
+        this.calcStats();
+        this.applyFilter();
         this.loading.set(false);
         this.cdr.markForCheck();
       },
@@ -112,76 +103,64 @@ export class ProjectTasksComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updateStats(): void {
+  private calcStats() {
     const tasks = this.allTasks();
     const done = tasks.filter(t => t.completed).length;
-    this.completedCount.set(done);
+    this.doneCount.set(done);
     this.pendingCount.set(tasks.length - done);
-    this.completionPct.set(
-      tasks.length ? Math.round((done / tasks.length) * 100) : 0
-    );
+    this.pct.set(tasks.length ? Math.round((done / tasks.length) * 100) : 0);
   }
 
-  applyFilters(): void {
-    const filter = this.activeFilter();
-    const term = (this.searchControl.value ?? '').toLowerCase().trim();
-    let tasks = this.allTasks();
+  applyFilter() {
+    const f = this.activeFilter();
+    const q = (this.search.value ?? '').toLowerCase().trim();
+    let result = this.allTasks();
 
-    if (filter === 'completed') tasks = tasks.filter(t => t.completed);
-    else if (filter === 'pending') tasks = tasks.filter(t => !t.completed);
-    if (term) tasks = tasks.filter(t => t.title.toLowerCase().includes(term));
+    if (f === 'completed') result = result.filter(t => t.completed);
+    if (f === 'pending') result = result.filter(t => !t.completed);
+    if (q) result = result.filter(t => t.title.toLowerCase().includes(q));
 
-    this.filteredTasks.set(tasks);
-    this.updatePagination(tasks);
+    this.filtered.set(result);
+    this.totalPages.set(Math.ceil(result.length / this.PAGE_SIZE));
+    this.setPage(this.currentPage());
     this.cdr.markForCheck();
   }
 
-  private updatePagination(tasks: Task[]): void {
-    const total = Math.ceil(tasks.length / this.pageSize);
-    this.totalPages.set(total);
-    // clamp current page
-    if (this.currentPage() > total) this.currentPage.set(Math.max(1, total));
-    this.updatePagedTasks(tasks);
+  setFilter(f: Filter) {
+    this.activeFilter.set(f);
+    this.currentPage.set(1);
+    this.applyFilter();
   }
 
-  private updatePagedTasks(tasks: Task[]): void {
-    const start = (this.currentPage() - 1) * this.pageSize;
-    this.pagedTasks.set(tasks.slice(start, start + this.pageSize));
-  }
-
-  goToPage(page: number): void {
+  goToPage(page: number) {
     this.currentPage.set(page);
-    this.updatePagedTasks(this.filteredTasks());
+    this.setPage(page);
     this.cdr.markForCheck();
   }
 
-  pageNumbers(): number[] {
+  private setPage(page: number) {
+    const start = (page - 1) * this.PAGE_SIZE;
+    this.paged.set(this.filtered().slice(start, start + this.PAGE_SIZE));
+  }
+
+  get pages(): number[] {
     return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
   }
 
-  setFilter(f: FilterStatus): void {
-    this.activeFilter.set(f);
-    this.currentPage.set(1);
-    this.applyFilters();
-  }
-
-  openModal(): void { this.modalOpen.set(true); }
-  closeModal(): void { this.modalOpen.set(false); }
-
-  handleTaskCreated(task: Task): void {
+  onTaskCreated(task: Task) {
     this.allTasks.update(tasks => [task, ...tasks]);
-    this.updateStats();
+    this.calcStats();
     this.currentPage.set(1);
-    this.applyFilters();
-    this.closeModal();
+    this.applyFilter();
+    this.showModal.set(false);
     this.cdr.markForCheck();
   }
 
-  getInitials(name: string): string {
+  getInitials(name: string) {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
   }

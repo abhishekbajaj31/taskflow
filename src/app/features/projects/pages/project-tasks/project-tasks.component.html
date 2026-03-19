@@ -2,7 +2,7 @@
 
   <nav class="breadcrumb">
     <a routerLink="/projects">Projects</a>
-    <span>›</span>
+    <span> / </span>
     <span>{{ project()?.name ?? '...' }}</span>
   </nav>
 
@@ -13,7 +13,6 @@
     <app-error-state [message]="error()!" (retry)="loadData()" />
   } @else {
 
-    <!-- Project header -->
     <div class="project-header">
       <div class="project-info">
         <div class="avatar">{{ getInitials(project()!.name) }}</div>
@@ -24,134 +23,91 @@
         </div>
       </div>
 
-      <div class="header-stats">
-        <div class="stat-item">
+      <div class="stats">
+        <div class="stat">
           <strong>{{ allTasks().length }}</strong>
           <span>Total</span>
         </div>
-        <div class="stat-item">
-          <strong class="done">{{ completedCount() }}</strong>
+        <div class="stat">
+          <strong class="green">{{ doneCount() }}</strong>
           <span>Done</span>
         </div>
-        <div class="stat-item">
-          <strong class="pending">{{ pendingCount() }}</strong>
+        <div class="stat">
+          <strong class="orange">{{ pendingCount() }}</strong>
           <span>Pending</span>
         </div>
-        <div class="completion-ring">
+        <div class="ring">
           <svg viewBox="0 0 36 36">
-            <path class="track" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path class="fill"
-              [attr.stroke-dasharray]="completionPct() + ', 100'"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="track" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <path class="fill" [attr.stroke-dasharray]="pct() + ', 100'"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
           </svg>
-          <span>{{ completionPct() }}%</span>
+          <span>{{ pct() }}%</span>
         </div>
       </div>
     </div>
 
-    <!-- Toolbar -->
     <div class="toolbar">
       <div class="filters">
         @for (f of filters; track f.value) {
-          <button
-            class="filter-btn"
-            [class.active]="activeFilter() === f.value"
-            (click)="setFilter(f.value)"
-          >
+          <button [class.active]="activeFilter() === f.value" (click)="setFilter(f.value)">
             {{ f.label }}
           </button>
         }
       </div>
       <div class="toolbar-right">
-        <input
-          [formControl]="searchControl"
-          type="text"
-          placeholder="Search tasks..."
-          class="search-input"
-        />
-        <button class="add-btn" (click)="openModal()">+ Add Task</button>
+        <input [formControl]="search" type="text" placeholder="Search tasks..." />
+        <button class="add-btn" (click)="showModal.set(true)">+ Add Task</button>
       </div>
     </div>
 
-    <!-- Tasks list -->
-    @if (pagedTasks().length === 0) {
+    @if (paged().length === 0) {
       <app-empty-state
-        [title]="searchControl.value ? 'No tasks match that search' : 'No tasks in this filter'"
+        [title]="search.value ? 'No tasks match your search' : 'No tasks here'"
         subtitle="Try a different filter or add a new task"
       />
     } @else {
       <div class="task-list">
-        @for (task of pagedTasks(); track task.id) {
+        @for (task of paged(); track task.id) {
           <app-task-item [task]="task" [isNew]="task.id > 200" />
         }
       </div>
 
-      <!-- Pagination -->
       @if (totalPages() > 1) {
         <div class="pagination">
-          <button
-            class="page-btn"
-            [disabled]="currentPage() === 1"
-            (click)="goToPage(currentPage() - 1)"
-          >
-            ← Prev
-          </button>
-
-          <div class="page-numbers">
-            @for (p of pageNumbers(); track p) {
-              <button
-                class="page-num"
-                [class.active]="currentPage() === p"
-                (click)="goToPage(p)"
-              >
-                {{ p }}
-              </button>
-            }
-          </div>
-
-          <button
-            class="page-btn"
-            [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(currentPage() + 1)"
-          >
-            Next →
-          </button>
-
-          <span class="page-info">
-            {{ (currentPage() - 1) * pageSize + 1 }}–{{ Math.min(currentPage() * pageSize, filteredTasks().length) }}
-            of {{ filteredTasks().length }}
-          </span>
+          <button [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">← Prev</button>
+          @for (p of pages; track p) {
+            <button [class.active]="currentPage() === p" (click)="goToPage(p)">{{ p }}</button>
+          }
+          <button [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">Next →</button>
+          <small>{{ (currentPage() - 1) * PAGE_SIZE + 1 }}–{{ Math.min(currentPage() * PAGE_SIZE, filtered().length) }} of {{ filtered().length }}</small>
         </div>
       }
     }
 
-    <!-- Comments section (uses /comments API) -->
     @if (comments().length > 0) {
-      <div class="comments-section">
-        <h3 class="comments-title">Recent Activity</h3>
-        <div class="comments-list">
-          @for (comment of comments(); track comment.id) {
-            <div class="comment-item">
-              <div class="comment-avatar">{{ comment.name[0].toUpperCase() }}</div>
-              <div class="comment-body">
-                <p class="comment-name">{{ comment.name }}</p>
-                <p class="comment-text">{{ comment.body }}</p>
-              </div>
+      <div class="comments">
+        <h3>Recent Activity</h3>
+        @for (c of comments(); track c.id) {
+          <div class="comment">
+            <div class="c-avatar">{{ c.name[0].toUpperCase() }}</div>
+            <div>
+              <p class="c-name">{{ c.name }}</p>
+              <p class="c-text">{{ c.body }}</p>
             </div>
-          }
-        </div>
+          </div>
+        }
       </div>
     }
 
   }
 
-  <!-- Task creation modal -->
-  @if (modalOpen()) {
+  @if (showModal()) {
     <app-task-form-modal
       [projectName]="project()?.name ?? ''"
       [userId]="+id"
-      (submitted)="handleTaskCreated($event)"
-      (closed)="closeModal()"
+      (submitted)="onTaskCreated($event)"
+      (closed)="showModal.set(false)"
     />
   }
 

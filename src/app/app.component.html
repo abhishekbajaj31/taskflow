@@ -1,17 +1,15 @@
 <div class="app-shell">
-  <header class="app-header">
-    <div class="header-inner">
-      <a routerLink="/projects" class="logo">
-        <span class="logo-text">TaskFlow</span>
-      </a>
-      <nav class="main-nav">
-        <a routerLink="/projects" routerLinkActive="active" class="nav-link">Projects</a>
-      </nav>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a routerLink="/projects" class="brand">TaskFlow</a>
+      <a routerLink="/projects" routerLinkActive="active" class="nav-link">Projects</a>
     </div>
-    <div class="progress-bar" [class.visible]="loadingService.isLoading()"></div>
-  </header>
+    <div class="loading-bar">
+      <div class="bar-fill" [class.active]="loadingService.isLoading()"></div>
+    </div>
+  </nav>
 
-  <main class="app-main">
+  <div class="page-content">
     <router-outlet />
-  </main>
+  </div>
 </div>

@@ -1,73 +1,44 @@
 .chart-wrap {
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 1.25rem 1.5rem 1rem;
-  margin-bottom: 1.5rem;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+  }
 }
 
-.chart-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #475569;
-  margin: 0 0 0.75rem;
-}
-
-.chart-legend {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.legend-item {
-  font-size: 0.75rem;
-  color: #64748b;
+.legend {
+  font-size: 12px;
+  color: #6b7280;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-  }
-
-  &.done-legend::before {
-    background: #2563eb;
-  }
-
-  &.pending-legend::before {
-    background: #bfdbfe;
-  }
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
-.chart-scroll {
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+
+  &.blue  { background: #2563eb; }
+  &.light { background: #bfdbfe; }
+}
+
+.scroll {
   overflow-x: auto;
-  overflow-y: hidden;
 }
 
-.bar-chart {
-  display: block;
-}
+.chart { display: block; }
 
-.bar-pending {
-  fill: #bfdbfe;
-}
-
-.bar-done {
-  fill: #2563eb;
-}
-
-.bar-label {
-  font-size: 9px;
-  fill: #64748b;
-  font-family: inherit;
-}
-
-.bar-name {
-  font-size: 9px;
-  fill: #94a3b8;
-  font-family: inherit;
-}
+.bar-bg   { fill: #bfdbfe; }
+.bar-fill { fill: #2563eb; }
+.label    { font-size: 9px; fill: #6b7280; font-family: inherit; }
+.name     { font-size: 9px; fill: #9ca3af; font-family: inherit; }

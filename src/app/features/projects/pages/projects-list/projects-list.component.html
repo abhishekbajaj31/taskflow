@@ -1,19 +1,14 @@
 <div class="projects-page">
 
   <div class="page-header">
-    <div class="page-heading">
+    <div>
       <h1>Projects</h1>
-      <span class="count">{{ filteredProjects().length }} of {{ allProjects().length }}</span>
+      <small>{{ filtered().length }} of {{ projects().length }} projects</small>
     </div>
-    <div class="search-wrap">
-      <input
-        [formControl]="searchControl"
-        type="text"
-        placeholder="Search by name, email or company..."
-        class="search-input"
-      />
-      @if (searchControl.value) {
-        <button class="clear-btn" (click)="clearSearch()">✕</button>
+    <div class="search-box">
+      <input [formControl]="search" type="text" placeholder="Search projects..." />
+      @if (search.value) {
+        <button (click)="clearSearch()">✕</button>
       }
     </div>
   </div>
@@ -21,45 +16,40 @@
   @if (loading()) {
     <app-loading-skeleton [count]="6" variant="card" />
   } @else if (error()) {
-    <app-error-state [message]="error()!" (retry)="loadProjects()" />
-  } @else if (filteredProjects().length === 0) {
+    <app-error-state [message]="error()!" (retry)="load()" />
+  } @else if (filtered().length === 0) {
     <app-empty-state
-      [title]="searchControl.value ? 'No results for that search' : 'No projects found'"
-      subtitle="Try adjusting your search or check back later"
+      [title]="search.value ? 'No projects match your search' : 'No projects found'"
+      subtitle="Try a different search term"
     />
   } @else {
 
-    <!-- Bonus: SVG Bar Chart -->
-    <app-stats-chart [projects]="allProjects()" />
+    <app-stats-chart [projects]="projects()" />
 
     <div class="projects-grid">
-      @for (project of filteredProjects(); track project.id) {
-        <a [routerLink]="['/projects', project.id, 'tasks']" class="project-card">
+      @for (project of filtered(); track project.id) {
+        <a class="card" [routerLink]="['/projects', project.id, 'tasks']">
 
-          <div class="card-top">
+          <div class="card-header">
             <div class="avatar">{{ getInitials(project.name) }}</div>
-            <span class="badge" [ngClass]="getCompletionClass(project)">
-              {{ getCompletionPct(project) }}%
-            </span>
+            <span class="badge" [ngClass]="getBadgeClass(project)">{{ getPct(project) }}%</span>
           </div>
 
-          <div class="card-body">
-            <h3 class="project-name">{{ project.name }}</h3>
-            <p class="company-name">{{ project.company.name }}</p>
-            <p class="email">{{ project.email }}</p>
-          </div>
+          <h3>{{ project.name }}</h3>
+          <p class="company">{{ project.company.name }}</p>
+          <p class="email">{{ project.email }}</p>
 
-          <div class="card-stats">
+          <div class="stats">
             <div class="stat">
               <strong>{{ project.taskCount }}</strong>
               <span>Tasks</span>
             </div>
             <div class="stat">
-              <strong class="done">{{ project.completedTaskCount }}</strong>
+              <strong class="green">{{ project.completedTaskCount }}</strong>
               <span>Done</span>
             </div>
             <div class="stat">
-              <strong class="pending">{{ project.pendingTaskCount }}</strong>
+              <strong class="orange">{{ project.pendingTaskCount }}</strong>
               <span>Pending</span>
             </div>
             <div class="stat">
@@ -68,14 +58,11 @@
             </div>
           </div>
 
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="getCompletionPct(project)"></div>
+          <div class="progress">
+            <div class="progress-fill" [style.width.%]="getPct(project)"></div>
           </div>
 
-          <div class="card-footer">
-            View tasks →
-          </div>
-
+          <span class="view-link">View tasks →</span>
         </a>
       }
     </div>
