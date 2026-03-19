@@ -1,0 +1,69 @@
+<div class="overlay" (click)="onOverlayClick($event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+    <div class="modal-header">
+      <div>
+        <h2 id="modal-title">Add Task</h2>
+        <p class="modal-sub">Project: <strong>{{ projectName }}</strong></p>
+      </div>
+      <button class="close-btn" (click)="closed.emit()" aria-label="Close modal">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+      <div class="field">
+        <label for="title">Title <span class="req">*</span></label>
+        <input
+          id="title"
+          type="text"
+          formControlName="title"
+          placeholder="What needs to be done?"
+          [class.is-invalid]="titleInvalid"
+          autocomplete="off"
+        />
+        @if (titleInvalid) {
+          <span class="field-error">
+            @if (form.get('title')?.errors?.['required']) { Title is required. }
+            @if (form.get('title')?.errors?.['minlength']) { At least 3 characters. }
+            @if (form.get('title')?.errors?.['maxlength']) { Max 200 characters. }
+          </span>
+        }
+        <span class="char-hint">{{ form.get('title')?.value?.length ?? 0 }} / 200</span>
+      </div>
+
+      <div class="field">
+        <label>Status <span class="req">*</span></label>
+        <div class="status-group">
+          <label class="status-opt" [class.selected]="form.get('status')?.value === 'pending'">
+            <input type="radio" formControlName="status" value="pending" />
+            <span class="dot pending"></span>
+            Pending
+          </label>
+          <label class="status-opt" [class.selected]="form.get('status')?.value === 'completed'">
+            <input type="radio" formControlName="status" value="completed" />
+            <span class="dot completed"></span>
+            Completed
+          </label>
+        </div>
+      </div>
+
+      <p class="api-note">
+        JSONPlaceholder accepts this POST but doesn't persist data.
+        Your task will appear locally for this session.
+      </p>
+
+      @if (submitError()) {
+        <p class="submit-error">{{ submitError() }}</p>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closed.emit()">Cancel</button>
+        <button type="submit" class="btn-submit" [disabled]="form.invalid || submitting()">
+          {{ submitting() ? 'Saving...' : 'Add Task' }}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>

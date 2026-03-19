@@ -1,0 +1,38 @@
+@if (variant === 'card') {
+  <div class="skeleton-grid">
+    @for (i of items; track i) {
+      <div class="skeleton-card">
+        <div class="row">
+          <div class="skel avatar"></div>
+          <div class="skel badge"></div>
+        </div>
+        <div class="skel line wide"></div>
+        <div class="skel line mid"></div>
+        <div class="skel line short"></div>
+        <div class="skel block"></div>
+      </div>
+    }
+  </div>
+}
+
+@if (variant === 'row') {
+  <div class="skeleton-list">
+    @for (i of items; track i) {
+      <div class="skeleton-row">
+        <div class="skel check"></div>
+        <div class="skel line flex"></div>
+        <div class="skel chip"></div>
+      </div>
+    }
+  </div>
+}
+
+@if (variant === 'header') {
+  <div class="skeleton-header">
+    <div class="skel avatar-lg"></div>
+    <div class="lines">
+      <div class="skel line wide"></div>
+      <div class="skel line mid"></div>
+    </div>
+  </div>
+}

@@ -1,0 +1,158 @@
+<div class="tasks-page">
+
+  <nav class="breadcrumb">
+    <a routerLink="/projects">Projects</a>
+    <span>›</span>
+    <span>{{ project()?.name ?? '...' }}</span>
+  </nav>
+
+  @if (loading()) {
+    <app-loading-skeleton [count]="1" variant="header" />
+    <app-loading-skeleton [count]="8" variant="row" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="loadData()" />
+  } @else {
+
+    <!-- Project header -->
+    <div class="project-header">
+      <div class="project-info">
+        <div class="avatar">{{ getInitials(project()!.name) }}</div>
+        <div>
+          <h1>{{ project()!.name }}</h1>
+          <p class="company">{{ project()!.company.name }}</p>
+          <p class="website">{{ project()!.website }}</p>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-item">
+          <strong>{{ allTasks().length }}</strong>
+          <span>Total</span>
+        </div>
+        <div class="stat-item">
+          <strong class="done">{{ completedCount() }}</strong>
+          <span>Done</span>
+        </div>
+        <div class="stat-item">
+          <strong class="pending">{{ pendingCount() }}</strong>
+          <span>Pending</span>
+        </div>
+        <div class="completion-ring">
+          <svg viewBox="0 0 36 36">
+            <path class="track" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="fill"
+              [attr.stroke-dasharray]="completionPct() + ', 100'"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <span>{{ completionPct() }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="filters">
+        @for (f of filters; track f.value) {
+          <button
+            class="filter-btn"
+            [class.active]="activeFilter() === f.value"
+            (click)="setFilter(f.value)"
+          >
+            {{ f.label }}
+          </button>
+        }
+      </div>
+      <div class="toolbar-right">
+        <input
+          [formControl]="searchControl"
+          type="text"
+          placeholder="Search tasks..."
+          class="search-input"
+        />
+        <button class="add-btn" (click)="openModal()">+ Add Task</button>
+      </div>
+    </div>
+
+    <!-- Tasks list -->
+    @if (pagedTasks().length === 0) {
+      <app-empty-state
+        [title]="searchControl.value ? 'No tasks match that search' : 'No tasks in this filter'"
+        subtitle="Try a different filter or add a new task"
+      />
+    } @else {
+      <div class="task-list">
+        @for (task of pagedTasks(); track task.id) {
+          <app-task-item [task]="task" [isNew]="task.id > 200" />
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button
+            class="page-btn"
+            [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            ← Prev
+          </button>
+
+          <div class="page-numbers">
+            @for (p of pageNumbers(); track p) {
+              <button
+                class="page-num"
+                [class.active]="currentPage() === p"
+                (click)="goToPage(p)"
+              >
+                {{ p }}
+              </button>
+            }
+          </div>
+
+          <button
+            class="page-btn"
+            [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Next →
+          </button>
+
+          <span class="page-info">
+            {{ (currentPage() - 1) * pageSize + 1 }}–{{ Math.min(currentPage() * pageSize, filteredTasks().length) }}
+            of {{ filteredTasks().length }}
+          </span>
+        </div>
+      }
+    }
+
+    <!-- Comments section (uses /comments API) -->
+    @if (comments().length > 0) {
+      <div class="comments-section">
+        <h3 class="comments-title">Recent Activity</h3>
+        <div class="comments-list">
+          @for (comment of comments(); track comment.id) {
+            <div class="comment-item">
+              <div class="comment-avatar">{{ comment.name[0].toUpperCase() }}</div>
+              <div class="comment-body">
+                <p class="comment-name">{{ comment.name }}</p>
+                <p class="comment-text">{{ comment.body }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  }
+
+  <!-- Task creation modal -->
+  @if (modalOpen()) {
+    <app-task-form-modal
+      [projectName]="project()?.name ?? ''"
+      [userId]="+id"
+      (submitted)="handleTaskCreated($event)"
+      (closed)="closeModal()"
+    />
+  }
+
+</div>

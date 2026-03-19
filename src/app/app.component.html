@@ -1,0 +1,17 @@
+<div class="app-shell">
+  <header class="app-header">
+    <div class="header-inner">
+      <a routerLink="/projects" class="logo">
+        <span class="logo-text">TaskFlow</span>
+      </a>
+      <nav class="main-nav">
+        <a routerLink="/projects" routerLinkActive="active" class="nav-link">Projects</a>
+      </nav>
+    </div>
+    <div class="progress-bar" [class.visible]="loadingService.isLoading()"></div>
+  </header>
+
+  <main class="app-main">
+    <router-outlet />
+  </main>
+</div>

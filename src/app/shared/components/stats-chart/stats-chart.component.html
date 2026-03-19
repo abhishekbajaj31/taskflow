@@ -1,0 +1,54 @@
+<div class="chart-wrap">
+  <h3 class="chart-title">Task Overview — Top 10 Projects</h3>
+
+  <div class="chart-legend">
+    <span class="legend-item done-legend">Completed</span>
+    <span class="legend-item pending-legend">Pending</span>
+  </div>
+
+  <div class="chart-scroll">
+    <svg
+      [attr.width]="svgWidth"
+      [attr.height]="chartHeight + 60"
+      class="bar-chart"
+    >
+      @for (item of chartData; track item.name; let i = $index) {
+        <!-- Pending bar (background, full height) -->
+        <rect
+          [attr.x]="getBarX(i)"
+          [attr.y]="getBarY(item.total)"
+          [attr.width]="barWidth"
+          [attr.height]="getBarHeight(item.total)"
+          class="bar-pending"
+          rx="3"
+        />
+
+        <!-- Completed bar (foreground, proportional) -->
+        <rect
+          [attr.x]="getBarX(i)"
+          [attr.y]="getBarY(item.done)"
+          [attr.width]="barWidth"
+          [attr.height]="getBarHeight(item.done)"
+          class="bar-done"
+          rx="3"
+        />
+
+        <!-- Total label above bar -->
+        <text
+          [attr.x]="getBarX(i) + barWidth / 2"
+          [attr.y]="getBarY(item.total) - 4"
+          class="bar-label"
+          text-anchor="middle"
+        >{{ item.total }}</text>
+
+        <!-- Project name label below -->
+        <text
+          [attr.x]="getBarX(i) + barWidth / 2"
+          [attr.y]="chartHeight + 38"
+          class="bar-name"
+          text-anchor="middle"
+        >{{ item.name }}</text>
+      }
+    </svg>
+  </div>
+</div>
